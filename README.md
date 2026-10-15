@@ -1,0 +1,150 @@
+# DebugEvidenceBlindSpot: executable debugging study + causal evidence deletion
+
+## Latest local experiment (October 15, 2026)
+
+**Completed and measured on local CPU:** 8 executable Python bug families, 16 paired buggy projects, 5 evidence conditions, 80 decisions per policy for **two non-LLM baselines**. The original programs failed three consecutive runs plus pytest. Selected repairs were applied to isolated file copies and validated with three consecutive execution checks plus pytest. `tests/test_live_harness.py` checks paired-observation indistinguishability, patch specificity, and recorded output integrity.
+
+**Local control results:** Diagnostic-rule policy correctly patched 16/16 with full evidence, 16/16 with an informative causal slice, and 16/16 after evidence retrieval. With decisive evidence missing, it requested evidence 16/16 times and did not guess. The naive always-A control fixed 8/16 in every condition, including those with no identifying evidence. These are **NOT Qwen results**. Details and caveats: [`LIVE_EXPERIMENT_REPORT.md`](LIVE_EXPERIMENT_REPORT.md). Graph: `results/live_controls.png`.
+
+**Not yet completed:** Qwen3-4B-Instruct-2507 model inference. This local environment has no GPU and cannot reach Hugging Face model downloads. The self-contained [`LIVE_Qwen3_4B_Colab.ipynb`](LIVE_Qwen3_4B_Colab.ipynb) runs the actual model on Google Colab, records raw generated responses and model revision, and executes patches and tests. No model success-rate claim or HF bucket URL is provided before the model actually runs and the 80-generation verification passes.
+
+### Run the verified executable benchmark locally
+
+```bash
+python build_live_cases.py
+python live_eval.py --backend diagnostic_rule --max-families 2 --repeat 3
+python live_eval.py --backend always_a --max-families 2 --repeat 3
+PYTEST_DISABLE_PLUGIN_AUTOLOAD=1 python -m pytest -q tests/test_live_harness.py
+```
+
+For the measured full local results, inspect `results/live_diagnostic_rule.jsonl`, `results/live_always_a.jsonl`, and the corresponding `_summary.json` files. To recreate the exact full local runs, use four shards per backend: `--max-families 2 --family-offset 0`, `2`, `4`, and `6`; then run `python merge_live_results.py` and `python write_live_report.py`. A shard's output must be named `results/live_<backend>_part<n>.jsonl` to merge as written. This sharding avoids long unattended CPU test processes.
+
+### Run the open-weight model on a GPU
+
+1. Open `LIVE_Qwen3_4B_Colab.ipynb` in Google Colab and select a GPU runtime.
+2. Execute the initial model pilot (4 bug worlds), followed by the 80-decision full model run.
+3. Run `python verify_model_results.py results/live_qwen_all.jsonl` to verify the data and produce measured model metrics.
+4. Optionally run `--prompt-mode evidence_aware` to test whether stronger instructions help the model request missing evidence. The primary condition uses the baseline instruction, with identical instructions across the five observation conditions.
+5. After model results exist, authenticate to Hugging Face and run `python publish_live_bucket.py`. **No publication to GitHub or Hugging Face was performed in this environment.**
+
+### Design note
+
+This is a **live patch-selection benchmark**: the agent chooses from two candidate root causes, the harness applies the corresponding one-line patch, and the patch is tested on real executable programs. It is not a free-form autonomous code-editing benchmark, not a measured SWE-bench result, and not a study of production failure rates. Synthetic problem construction makes the evidence-deletion intervention experimentally identifiable. The original 24-family non-executable synthetic CED text benchmark remains below, as a complementary controlled evaluation. Importantly, the local instrumentation-based rule sees known-good settings and is an upper-bound control, not an independently trained debugging model.
+
+---
+
+# Causal Evidence Deletion (CED)
+
+**Technical challenge: Blind Spots of Frontier Models**  
+**Model:** [Qwen3-4B-Instruct-2507](https://huggingface.co/Qwen/Qwen3-4B-Instruct-2507) (4.0B, Apache 2.0)  
+**Benchmark:** 24 synthetic debugging families, 48 counterfactual worlds, 5 observation conditions, 240 model generations for the primary full run. An optional second prompt regime can add 240 more.  
+**Status:** The synthetic dataset and local integrity tests are complete. **No open-weight-model evaluation has been executed in the preparation environment.** The GPU run, real generations, metrics, and Hugging Face bucket publication must be performed using the Colab notebook. Do not claim scores until `results/actual_generations.jsonl` exists and has been analyzed.
+
+## 1. Blind spot, grounded in my experience
+
+My research concerns optimizing the context passed to software-engineering AI agents. A coding agent does not see the whole execution of a program. It sees selected code, test failures, terminal output, and summaries of earlier tools. When these are compressed to reduce token cost, a single deleted line can make two different bugs look identical. My research motivation is not just compression quality, but **what an agent does when it has lost the evidence required for a reliable debugging decision**.
+
+In my earlier SymPy fault-localization pilot, raw output and compressed output returned the same top-five candidates, and **neither placed the true source file in its top five**. Thus the pilot is *not evidence that compression caused a drop in accuracy*. It exposed a deeper methodological problem: measuring only a final rank or patch outcome does not tell us whether the agent saw the necessary causal evidence, whether it lost that evidence, or whether it should have requested more information.
+
+Consider two CUDA out-of-memory failures. World A increased the batch size from 16 to 256. World B retained 140 activation tensors across steps. Both end in the identical `CUDA out of memory` message. Only an earlier diagnostic line distinguishes the root causes. If a summarizer removes that line, the best debugging action is no longer to confidently select a fix. It is to retrieve the missing evidence.
+
+**Hypothesis:** Modern coding models sometimes answer *as if their partial view is complete*: they replace missing causal evidence with a plausible debugging story, and they may trust an unverified summary even when the evidence is absent.
+
+Why standard benchmarks often miss this: many code benchmarks score final patch correctness or fault-localization ranking. They do not normally construct *causally matched worlds with identical observed outputs*; they do not specifically score calibrated refusal-to-guess or evidence retrieval after lossy summarization. This is a narrow claim about this proposed evaluation design, **not** a claim that no previous research studies selective prediction, missing context, or agent uncertainty.
+
+## 2. Model choice
+
+I chose **Qwen/Qwen3-4B-Instruct-2507**, an openly downloadable, instruction-tuned, non-thinking, 4B-parameter model. Its model card reports improvements in coding, instruction following, and tool use. It is large enough to be a meaningful code-agent baseline, yet practical to run in NF4 4-bit form on a modest CUDA GPU such as a Colab T4. It has an explicit chat template and can be run locally with Transformers. I chose a capable model rather than a tiny model whose failures could be dismissed as simple under-capacity. The entire experiment runs on the **same fixed model** across all conditions. Quantization is kept constant across conditions.
+
+Model source: https://huggingface.co/Qwen/Qwen3-4B-Instruct-2507. Model weights remain at their original public model repository, to avoid unnecessary multi-GB duplication; this evaluation bucket includes the exact model ID and run metadata. The notebook records a resolved model commit SHA once a GPU evaluation is actually run.
+
+## 3. Evaluation protocol
+
+### Dataset construction
+
+There are 24 problem families spanning Python test infrastructure, framework routing, asynchronous code, tensors, numerical libraries, authentication, package builds, GNNs, and AI-agent debugging. For each family, world A and world B differ only in an **earlier, decisive diagnostic line**. Candidate explanations and all remaining visible error text are the same. The dataset is **synthetic** and deterministic, not mined from a real SWE-bench run; therefore the results should not be interpreted as measurements of real-world bug-fixing ability.
+
+Each of the 48 cases appears in five conditions:
+
+| Condition | Observation | Correct action |
+| --- | --- | --- |
+| `raw` | Normal diagnostic output including the decisive line and extraneous log noise | Choose correct A/B root cause |
+| `tail_only` | Error summary after the earlier line is removed | `NEED_LOG` |
+| `cause_preserved` | Compressed view that retains the one decisive line | Choose correct A/B root cause |
+| `decoy_only` | Evidence absent, but an *unverified* automated triage guess suggests A | `NEED_LOG` |
+| `restored` | Error summary plus re-retrieved decisive line | Choose correct A/B root cause |
+
+The A/B observations are **byte-for-byte identical** in each family's `tail_only` and `decoy_only` conditions. No text-only method can identify which world is true there. Always guessing A gives 50% label accuracy but **0% correct evidence-seeking behavior**.
+
+### Prompt / inference
+
+The same system instruction is given for every condition. In the primary **baseline** prompt, `NEED_LOG` is allowed but not required. An optional **evidence-aware** prompt strongly asks the model to request missing evidence rather than guess. This separates the model's default behavior from how much a targeted instruction can improve it. Output format is a JSON object with `decision` (A, B, or NEED_LOG) and a short `evidence` justification. Within each prompt regime, the instruction is fixed across all five observation conditions. Decoding uses `do_sample=False`, `max_new_tokens=96`, seed 42, and the same 4-bit NF4 weights. The notebook records raw generated text, parsed decisions, input/output token counts, elapsed inference time, gold choice, condition, prompt regime, family, and resolved model revision.
+
+### Metrics
+
+- **Evidence-rich accuracy:** correct A/B rate for `raw`, `cause_preserved`, `restored`.
+- **Appropriate evidence requests:** `NEED_LOG` rate on `tail_only` and `decoy_only`.
+- **Unsupported guess rate:** any A/B answer given on the underdetermined conditions.
+- **Counterfactual reversal:** fraction of matched A/B pairs whose predictions *flip correctly* when only the decisive diagnostic line changes. This guards against selection of the same plausible story regardless of evidence.
+- **Retrieval-policy simulation:** if a model asks for the missing line, supply the `restored` condition and measure final success and fraction of calls needing retrieval.
+- **Efficiency:** prompt tokens, completion tokens, and generated-token latency per condition. Token count is not a claim about API billing, GPU memory, or total agent costs.
+
+The `decoy_only` condition tests susceptibility to a seemingly helpful but unverified summary. The `cause_preserved` condition tests whether a very short log can be sufficient *if it preserves the right evidence*. These two conditions are especially relevant for tool-output compressors.
+
+### What outcomes would mean
+
+- `raw` works, `tail_only` guesses: evidence-absence awareness is weak.
+- `raw` works, `cause_preserved` works: short context can be effective if causally informative.
+- `tail_only` guesses but `decoy_only` increasingly chooses A: the model follows an ungrounded compression summary.
+- `tail_only` asks for evidence, `restored` works: retrieval offers a path to robust agent behavior.
+- `raw` fails: the issue may instead be base debugging reasoning, ambiguous synthetic labels, or instruction compliance.
+
+No conclusions about which outcome occurs are made without actual generated results.
+
+## 4. Path forward
+
+I propose an **evidence-aware context interface** connecting tool-output compression and the debugging model.
+
+1. **Curate counterfactual training pairs:** Collect real agent traces from pytest failures, CI builds, runtime crashes, and patch attempts. For each root cause, keep the final visible error constant while modifying one upstream cause and its diagnostic evidence. Generate both evidence-present and evidence-deleted examples. Validate labels with executable tests and, where possible, use program slicing or instrumentation to map a failure to relevant upstream events.
+2. **Train a three-action decision head or fine-tune with QLoRA:** For each partial observation, reward selecting a cause *only when supported*, and reward `REQUEST_EVIDENCE` otherwise. Include examples where summaries confidently suggest the wrong cause. Train with preference pairs contrasting justified retrieval with unsupported guessing. Use held-out repositories to test transfer.
+3. **Modify compression to preserve provenance:** Instead of choosing lines only by semantic similarity, assign each line an evidence score from traceback links, dataflow edges, changed variables, and test assertions. Carry through source filename, line number, and tool-output offsets so omitted evidence can be fetched on demand.
+4. **Close the agent loop:** The model must be able to call `retrieve_log(start_line, end_line)` or re-run a targeted debug probe when evidence is missing. Optimize for successful debugging per total tokens and tool calls, not only maximum compression ratio.
+5. **Evaluate tradeoffs honestly:** Compare equal token budgets and include CPU/GPU cost, extra retrieval calls, final patch correctness, false confident diagnoses, and performance on unfamiliar repositories. Retrieval may cost latency; provenance and context indexes introduce engineering overhead.
+
+The key goal is not to make the model memorize more bugs, but to make it **recognize when its current context cannot support a decision**, then restore the missing evidence.
+
+## 5. Run and reproduce
+
+**Simplest:** open `CED_Qwen3_4B_Colab.ipynb` in Google Colab, select a GPU runtime, and run cells top to bottom. The notebook is self-contained; it reconstructs these scripts and synthetic data, evaluates the open-weight model, computes metrics, and can publish the folder to a new **public Hugging Face Bucket** after you authenticate.
+
+Or using a CUDA GPU in this directory:
+
+```bash
+pip install -r requirements.txt
+python smoke_test.py
+python evaluate.py --max-families 0 --output results/actual_generations.jsonl
+python analyze.py results/actual_generations.jsonl --save results/metrics.json
+python publish_bucket.py --bucket-name causal-evidence-deletion-debugging
+```
+
+For a smaller dry run, use `--max-families 4`. For an optional prompt intervention, run `python evaluate.py --prompt-mode evidence_aware --max-families 0 --output results/evidence_aware_generations.jsonl` and score it separately. This will run 8 cases across 5 conditions, rather than the complete benchmark. **Do not confuse smoke tests or partial runs with a full benchmark result.**
+
+The bucket is created only after authentication. A connected viewing integration alone does not authorize publishing unless write actions are available. The publication script never uploads API tokens, model weights, `.git` folders, or caches.
+
+## 6. Files
+
+- `data/paired_cases.jsonl`: generated, paired evaluation data including gold labels and diagnostic sources.
+- `data/manifest.json`: count and SHA256 digest of data.
+- `generate_data.py`: deterministic generator and condition rendering.
+- `evaluate.py`: fixed-prompt, fixed-decoding GPU inference.
+- `analyze.py`: scoring of **actual** model generations only.
+- `smoke_test.py`: no-GPU correctness/information-symmetry checks.
+- `publish_bucket.py`: create and sync a public Hugging Face Bucket after login.
+- `CED_Qwen3_4B_Colab.ipynb`: fully self-contained Colab runner and publisher.
+- `results/`: left empty until a genuine GPU run.
+
+## 7. Limits
+
+The synthetic cases are intentionally simple and specify just two possible causes, so they do not measure open-ended debugging. The user prompt explicitly permits abstention, whereas many real agents implicitly expect a best guess. To extend the benchmark, evaluate free-form repo repair, vary compression policies and evidence location, use repeated seeds, collect longer logs from real CI failures, and independently review ambiguous labels. Avoid drawing population-level claims from 24 synthetic families.
+
+**Research ethics:** No model generation or Hugging Face publication is claimed until it has happened. Results must come from the provided open-weight evaluator and must preserve the original raw response text.
