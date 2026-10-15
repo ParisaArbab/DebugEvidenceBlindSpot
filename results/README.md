@@ -5,7 +5,7 @@
 - `live_diagnostic_rule.jsonl`: 80 instrumented-rule agent decisions, including patch checks, never model generations.
 - `live_always_a.jsonl`: 80 always-A agent decisions, including patch checks, never model generations.
 - Corresponding `_summary.json`: aggregated counts from those JSONL records.
-- `live_controls.png`: visualization of the two non-LLM control policies.
+- `live_controls.png`: local visualization of the two non-LLM control policies; regenerate with `python write_live_report.py` if absent.
 - `live_*_part{0,1,2,3}.jsonl`: the validated independent run shards.
 - `_run_*.log`, `_guess*.log`: local progress logs, not result records.
 
