@@ -1,0 +1,9 @@
+torch>=2.3
+transformers>=4.51.0
+accelerate>=1.2
+bitsandbytes>=0.45
+safetensors>=0.5
+huggingface_hub>=1.2
+pytest>=8.0
+nbformat>=5.10
+matplotlib>=3.8

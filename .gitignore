@@ -1,0 +1,38 @@
+# Secrets and authentication
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+*token*.txt
+
+# Python and notebooks
+__pycache__/
+*.py[cod]
+.ipynb_checkpoints/
+.venv/
+venv/
+
+# Generated inference data (never claim evaluation results before a real run)
+results/actual_generations.jsonl
+results/evidence_aware_generations.jsonl
+results/metrics.json
+results/run_metadata.json
+results/*_metrics.json
+
+# Local caches and downloaded model weights
+.cache/
+models/
+*.safetensors
+*.bin
+*.gguf
+
+# Temporary process output, local smoke and separately merged shards
+results/_*.log
+results/live_*_part*.jsonl
+results/live_*_part*_summary.json
+results/live_oracle_smoke*.jsonl
+results/live_oracle_smoke*_summary.json
+results/colab_sandbox_smoke*.jsonl
+results/colab_sandbox_smoke*_summary.json
+.pytest_cache/
