@@ -1,0 +1,58 @@
+{
+  "total_decision_tasks": 80,
+  "unique_bug_cases": 16,
+  "unique_bug_families": 8,
+  "conditions": {
+    "raw": {
+      "n": 16,
+      "correct_diagnosis": 8,
+      "successful_verified_repairs": 8,
+      "requested_evidence_first": 0,
+      "retrievals": 0,
+      "unsupported_guesses_initial": null,
+      "mean_initial_log_characters": 2842.8
+    },
+    "tail_only": {
+      "n": 16,
+      "correct_diagnosis": 8,
+      "successful_verified_repairs": 8,
+      "requested_evidence_first": 0,
+      "retrievals": 0,
+      "unsupported_guesses_initial": 16,
+      "mean_initial_log_characters": 118.0
+    },
+    "causal_slice": {
+      "n": 16,
+      "correct_diagnosis": 8,
+      "successful_verified_repairs": 8,
+      "requested_evidence_first": 0,
+      "retrievals": 0,
+      "unsupported_guesses_initial": null,
+      "mean_initial_log_characters": 106.8
+    },
+    "decoy_summary": {
+      "n": 16,
+      "correct_diagnosis": 8,
+      "successful_verified_repairs": 8,
+      "requested_evidence_first": 0,
+      "retrievals": 0,
+      "unsupported_guesses_initial": 16,
+      "mean_initial_log_characters": 192.0
+    },
+    "retrieval_enabled": {
+      "n": 16,
+      "correct_diagnosis": 8,
+      "successful_verified_repairs": 8,
+      "requested_evidence_first": 0,
+      "retrievals": 0,
+      "unsupported_guesses_initial": 16,
+      "mean_initial_log_characters": 118.0
+    }
+  },
+  "experimental_backend": "always_a",
+  "not_a_model_result": true,
+  "replications_per_pre_and_post_validation": 3,
+  "validated_original_failures": 16,
+  "model": null,
+  "methodology": "Executed instrumented Python cases, repeated each faulty behavior 3 times, pytest failure verification, applied selected source patch and verified 3 passes plus pytest."
+}

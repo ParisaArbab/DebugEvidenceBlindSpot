@@ -1,0 +1,338 @@
+[
+  {
+    "case_id": "pagination_A",
+    "family_id": "pagination",
+    "world": "A",
+    "test_name": "Paginated export returns incomplete records",
+    "candidate_A": "The export loop is limited to one page",
+    "candidate_B": "The cursor never advances to the next page",
+    "patch_A": {
+      "key": "MAX_PAGES",
+      "before": "1",
+      "after": "4"
+    },
+    "patch_B": {
+      "key": "ADVANCE_CURSOR",
+      "before": "False",
+      "after": "True"
+    },
+    "source_sha256": "ac589d582370673c2fa5d7435959347b422f098c0becb3303daa7241d56240c6",
+    "relative_path": "live_bugs/pagination/A",
+    "gold": "A"
+  },
+  {
+    "case_id": "pagination_B",
+    "family_id": "pagination",
+    "world": "B",
+    "test_name": "Paginated export returns incomplete records",
+    "candidate_A": "The export loop is limited to one page",
+    "candidate_B": "The cursor never advances to the next page",
+    "patch_A": {
+      "key": "MAX_PAGES",
+      "before": "1",
+      "after": "4"
+    },
+    "patch_B": {
+      "key": "ADVANCE_CURSOR",
+      "before": "False",
+      "after": "True"
+    },
+    "source_sha256": "8192bdf2ae2bf968ac4491d0d3ea1c63f3c4c3111e2452870132d890cee941cd",
+    "relative_path": "live_bugs/pagination/B",
+    "gold": "B"
+  },
+  {
+    "case_id": "json_cleanup_A",
+    "family_id": "json_cleanup",
+    "world": "A",
+    "test_name": "JSON event ingestion fails to parse payload",
+    "candidate_A": "The UTF-8 byte-order mark was not removed",
+    "candidate_B": "The trailing comma was not removed",
+    "patch_A": {
+      "key": "STRIP_BOM",
+      "before": "False",
+      "after": "True"
+    },
+    "patch_B": {
+      "key": "STRIP_COMMA",
+      "before": "False",
+      "after": "True"
+    },
+    "source_sha256": "ce5318ecabfc88c85fa6c62dceeeb2282076bc1a5001428844bbb2d4e762c603",
+    "relative_path": "live_bugs/json_cleanup/A",
+    "gold": "A"
+  },
+  {
+    "case_id": "json_cleanup_B",
+    "family_id": "json_cleanup",
+    "world": "B",
+    "test_name": "JSON event ingestion fails to parse payload",
+    "candidate_A": "The UTF-8 byte-order mark was not removed",
+    "candidate_B": "The trailing comma was not removed",
+    "patch_A": {
+      "key": "STRIP_BOM",
+      "before": "False",
+      "after": "True"
+    },
+    "patch_B": {
+      "key": "STRIP_COMMA",
+      "before": "False",
+      "after": "True"
+    },
+    "source_sha256": "b53a68c36f573a5e20d736c198f8bb758a3b148aae12ce961e6fd8c55a905d61",
+    "relative_path": "live_bugs/json_cleanup/B",
+    "gold": "B"
+  },
+  {
+    "case_id": "auth_window_A",
+    "family_id": "auth_window",
+    "world": "A",
+    "test_name": "Valid API credentials incorrectly rejected",
+    "candidate_A": "The configured token lifetime is too short",
+    "candidate_B": "The verifier clock skew exceeds the allowed window",
+    "patch_A": {
+      "key": "TOKEN_TTL",
+      "before": "30",
+      "after": "600"
+    },
+    "patch_B": {
+      "key": "CLOCK_SKEW",
+      "before": "3600",
+      "after": "0"
+    },
+    "source_sha256": "2ff08f42b514e7a2bb9c62505695a47a0976bf9999d86dd11b5ef11ddc9f5371",
+    "relative_path": "live_bugs/auth_window/A",
+    "gold": "A"
+  },
+  {
+    "case_id": "auth_window_B",
+    "family_id": "auth_window",
+    "world": "B",
+    "test_name": "Valid API credentials incorrectly rejected",
+    "candidate_A": "The configured token lifetime is too short",
+    "candidate_B": "The verifier clock skew exceeds the allowed window",
+    "patch_A": {
+      "key": "TOKEN_TTL",
+      "before": "30",
+      "after": "600"
+    },
+    "patch_B": {
+      "key": "CLOCK_SKEW",
+      "before": "3600",
+      "after": "0"
+    },
+    "source_sha256": "b0da6c4b5f1cb89fbe0b8c11b0b30c8f2ccb7f94bc7329283970728229469124",
+    "relative_path": "live_bugs/auth_window/B",
+    "gold": "B"
+  },
+  {
+    "case_id": "memory_budget_A",
+    "family_id": "memory_budget",
+    "world": "A",
+    "test_name": "Synthetic training step exceeds memory limit",
+    "candidate_A": "The training batch size exceeds the available budget",
+    "candidate_B": "Retained activations consume the budget",
+    "patch_A": {
+      "key": "BATCH_SIZE",
+      "before": "256",
+      "after": "16"
+    },
+    "patch_B": {
+      "key": "RETAINED_ACTIVATIONS",
+      "before": "200",
+      "after": "0"
+    },
+    "source_sha256": "9fbf20dc0cb92d84372fd88cf7cdfe9527561228cbd28f5f700507b123b387a7",
+    "relative_path": "live_bugs/memory_budget/A",
+    "gold": "A"
+  },
+  {
+    "case_id": "memory_budget_B",
+    "family_id": "memory_budget",
+    "world": "B",
+    "test_name": "Synthetic training step exceeds memory limit",
+    "candidate_A": "The training batch size exceeds the available budget",
+    "candidate_B": "Retained activations consume the budget",
+    "patch_A": {
+      "key": "BATCH_SIZE",
+      "before": "256",
+      "after": "16"
+    },
+    "patch_B": {
+      "key": "RETAINED_ACTIVATIONS",
+      "before": "200",
+      "after": "0"
+    },
+    "source_sha256": "25c7a85f497f3317d451ace3db4734ae23f985bff70ae969925c849ac2572a77",
+    "relative_path": "live_bugs/memory_budget/B",
+    "gold": "B"
+  },
+  {
+    "case_id": "graph_edges_A",
+    "family_id": "graph_edges",
+    "world": "A",
+    "test_name": "Heterogeneous graph message passing misses edges",
+    "candidate_A": "Reverse relation edges are removed",
+    "candidate_B": "Forward write relation edges are filtered out",
+    "patch_A": {
+      "key": "KEEP_REVERSE",
+      "before": "False",
+      "after": "True"
+    },
+    "patch_B": {
+      "key": "KEEP_WRITES",
+      "before": "False",
+      "after": "True"
+    },
+    "source_sha256": "4308380e4fb1f4e30f534bcbbc56c3587c07a46f0fcc3cfa75199b910007de37",
+    "relative_path": "live_bugs/graph_edges/A",
+    "gold": "A"
+  },
+  {
+    "case_id": "graph_edges_B",
+    "family_id": "graph_edges",
+    "world": "B",
+    "test_name": "Heterogeneous graph message passing misses edges",
+    "candidate_A": "Reverse relation edges are removed",
+    "candidate_B": "Forward write relation edges are filtered out",
+    "patch_A": {
+      "key": "KEEP_REVERSE",
+      "before": "False",
+      "after": "True"
+    },
+    "patch_B": {
+      "key": "KEEP_WRITES",
+      "before": "False",
+      "after": "True"
+    },
+    "source_sha256": "541ca8365803b8f813b43a4027152d43370af00b87747d585b84735345dc5e4a",
+    "relative_path": "live_bugs/graph_edges/B",
+    "gold": "B"
+  },
+  {
+    "case_id": "invoice_total_A",
+    "family_id": "invoice_total",
+    "world": "A",
+    "test_name": "Invoice final amount violates the calculation contract",
+    "candidate_A": "A cents conversion scale is incorrect",
+    "candidate_B": "The discount is added instead of subtracted",
+    "patch_A": {
+      "key": "CENTS_SCALE",
+      "before": "1",
+      "after": "100"
+    },
+    "patch_B": {
+      "key": "DISCOUNT_SIGN",
+      "before": "1",
+      "after": "-1"
+    },
+    "source_sha256": "3b2af60f7fd1c6f196b76870a6c5989b6108f991cf093bbe432d705d4be36128",
+    "relative_path": "live_bugs/invoice_total/A",
+    "gold": "A"
+  },
+  {
+    "case_id": "invoice_total_B",
+    "family_id": "invoice_total",
+    "world": "B",
+    "test_name": "Invoice final amount violates the calculation contract",
+    "candidate_A": "A cents conversion scale is incorrect",
+    "candidate_B": "The discount is added instead of subtracted",
+    "patch_A": {
+      "key": "CENTS_SCALE",
+      "before": "1",
+      "after": "100"
+    },
+    "patch_B": {
+      "key": "DISCOUNT_SIGN",
+      "before": "1",
+      "after": "-1"
+    },
+    "source_sha256": "680b55c8ecfa64637e3c26817be0a9928a9e3905677435bd90ae031f012ed2fb",
+    "relative_path": "live_bugs/invoice_total/B",
+    "gold": "B"
+  },
+  {
+    "case_id": "stream_chunk_A",
+    "family_id": "stream_chunk",
+    "world": "A",
+    "test_name": "Streaming reader drops records",
+    "candidate_A": "The reader stops after a short first chunk",
+    "candidate_B": "The last record is dropped during reassembly",
+    "patch_A": {
+      "key": "READ_LIMIT",
+      "before": "2",
+      "after": "4"
+    },
+    "patch_B": {
+      "key": "DROP_LAST",
+      "before": "True",
+      "after": "False"
+    },
+    "source_sha256": "f3e7fb7feae57ec8d9526da3a9f511a1936b89ea72c4bca786ab99631ef158ee",
+    "relative_path": "live_bugs/stream_chunk/A",
+    "gold": "A"
+  },
+  {
+    "case_id": "stream_chunk_B",
+    "family_id": "stream_chunk",
+    "world": "B",
+    "test_name": "Streaming reader drops records",
+    "candidate_A": "The reader stops after a short first chunk",
+    "candidate_B": "The last record is dropped during reassembly",
+    "patch_A": {
+      "key": "READ_LIMIT",
+      "before": "2",
+      "after": "4"
+    },
+    "patch_B": {
+      "key": "DROP_LAST",
+      "before": "True",
+      "after": "False"
+    },
+    "source_sha256": "cc13d4391f875b13701319112f9f5b12c84460f705f8613d9ae55af40739e4ba",
+    "relative_path": "live_bugs/stream_chunk/B",
+    "gold": "B"
+  },
+  {
+    "case_id": "cache_consistency_A",
+    "family_id": "cache_consistency",
+    "world": "A",
+    "test_name": "Caching returns stale or cross-user results",
+    "candidate_A": "Cache keys omit the user identifier",
+    "candidate_B": "The cache lifetime is too long",
+    "patch_A": {
+      "key": "INCLUDE_USER",
+      "before": "False",
+      "after": "True"
+    },
+    "patch_B": {
+      "key": "TTL",
+      "before": "999",
+      "after": "30"
+    },
+    "source_sha256": "d7d8e8f09ccc3518a2335d1e18ab78db601d87ffb6a314f6cfbe03209769330a",
+    "relative_path": "live_bugs/cache_consistency/A",
+    "gold": "A"
+  },
+  {
+    "case_id": "cache_consistency_B",
+    "family_id": "cache_consistency",
+    "world": "B",
+    "test_name": "Caching returns stale or cross-user results",
+    "candidate_A": "Cache keys omit the user identifier",
+    "candidate_B": "The cache lifetime is too long",
+    "patch_A": {
+      "key": "INCLUDE_USER",
+      "before": "False",
+      "after": "True"
+    },
+    "patch_B": {
+      "key": "TTL",
+      "before": "999",
+      "after": "30"
+    },
+    "source_sha256": "b26a8c87e60f21dd27176c339c5d08ec30b30bd500e7699d87482bc8cf1503de",
+    "relative_path": "live_bugs/cache_consistency/B",
+    "gold": "B"
+  }
+]

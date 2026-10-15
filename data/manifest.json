@@ -1,0 +1,16 @@
+{
+  "dataset": "Causal Evidence Deletion (CED) v1",
+  "synthetic": true,
+  "family_count": 24,
+  "case_count": 48,
+  "pairing": "24 matched A/B twin families",
+  "conditions": [
+    "raw",
+    "tail_only",
+    "cause_preserved",
+    "decoy_only",
+    "restored"
+  ],
+  "sha256": "508ae10747a7fe949c8361ad59953a529d432c43e04ca174b9e2e5153db92077",
+  "model_results_collected": false
+}

@@ -1,0 +1,12 @@
+{
+  "model_id": "Qwen/Qwen3-4B-Instruct-2507",
+  "model_url": "https://huggingface.co/Qwen/Qwen3-4B-Instruct-2507",
+  "parameters": "4.0B",
+  "license": "apache-2.0",
+  "chosen_for": "coding and tool-use abilities, open weights, can be evaluated with 4-bit quantization on a modest CUDA GPU",
+  "quantization_for_run": "NF4 4-bit",
+  "decoding_for_run": "greedy, temperature not applicable",
+  "original_weights": "Remain publicly hosted in original Hugging Face model repository; not duplicated in the evaluation bucket",
+  "resolved_revision_at_run": "See results/run_metadata.json after actual GPU run",
+  "model_evaluation_status": "NOT_RUN_IN_PREPARATION_ENVIRONMENT"
+}
