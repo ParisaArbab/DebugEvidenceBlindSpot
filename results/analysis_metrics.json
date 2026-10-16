@@ -1,0 +1,238 @@
+{
+  "study": "Live Causal Evidence Deletion (16 executable bug worlds / 8 paired families)",
+  "model": "Qwen/Qwen3-4B-Instruct-2507",
+  "model_revision": "cdbee75f17c01a7cc42f958dc650907174af0554",
+  "experimental_unit_note": "Two correlated worlds per family; results descriptive, not representative of production debugging",
+  "runs": {
+    "baseline": {
+      "raw": {
+        "n": 16,
+        "verified_repairs": 11,
+        "correct_diagnoses": 11,
+        "initial_decisions": {
+          "A": 8,
+          "B": 7,
+          "NEED_LOG": 0,
+          "INVALID": 1
+        },
+        "initial_evidence_requests": 0,
+        "retrievals": 0,
+        "initial_unsupported_guesses": null,
+        "mean_log_characters": 2842.75,
+        "mean_prompt_tokens": 1077.5,
+        "mean_generated_tokens": 60.0,
+        "initial_max_token_hits": 1,
+        "final_invalid_responses": 1
+      },
+      "tail_only": {
+        "n": 16,
+        "verified_repairs": 2,
+        "correct_diagnoses": 2,
+        "initial_decisions": {
+          "A": 0,
+          "B": 4,
+          "NEED_LOG": 12,
+          "INVALID": 0
+        },
+        "initial_evidence_requests": 12,
+        "retrievals": 0,
+        "initial_unsupported_guesses": 4,
+        "mean_log_characters": 118.0,
+        "mean_prompt_tokens": 157.75,
+        "mean_generated_tokens": 37.88,
+        "initial_max_token_hits": 0,
+        "final_invalid_responses": 0
+      },
+      "causal_slice": {
+        "n": 16,
+        "verified_repairs": 13,
+        "correct_diagnoses": 13,
+        "initial_decisions": {
+          "A": 8,
+          "B": 7,
+          "NEED_LOG": 0,
+          "INVALID": 1
+        },
+        "initial_evidence_requests": 0,
+        "retrievals": 0,
+        "initial_unsupported_guesses": null,
+        "mean_log_characters": 106.75,
+        "mean_prompt_tokens": 170.5,
+        "mean_generated_tokens": 52.56,
+        "initial_max_token_hits": 1,
+        "final_invalid_responses": 1
+      },
+      "decoy_summary": {
+        "n": 16,
+        "verified_repairs": 8,
+        "correct_diagnoses": 8,
+        "initial_decisions": {
+          "A": 16,
+          "B": 0,
+          "NEED_LOG": 0,
+          "INVALID": 0
+        },
+        "initial_evidence_requests": 0,
+        "retrievals": 0,
+        "initial_unsupported_guesses": 16,
+        "mean_log_characters": 192.0,
+        "mean_prompt_tokens": 175.75,
+        "mean_generated_tokens": 47.75,
+        "initial_max_token_hits": 0,
+        "final_invalid_responses": 0
+      },
+      "retrieval_enabled": {
+        "n": 16,
+        "verified_repairs": 11,
+        "correct_diagnoses": 11,
+        "initial_decisions": {
+          "A": 0,
+          "B": 4,
+          "NEED_LOG": 12,
+          "INVALID": 0
+        },
+        "initial_evidence_requests": 12,
+        "retrievals": 12,
+        "initial_unsupported_guesses": 4,
+        "mean_log_characters": 118.0,
+        "mean_prompt_tokens": 157.75,
+        "mean_generated_tokens": 37.88,
+        "initial_max_token_hits": 0,
+        "final_invalid_responses": 1,
+        "recovered_repairs_after_retrieval": 9,
+        "retrieval_final_max_token_hits": 1
+      }
+    },
+    "evidence_aware": {
+      "raw": {
+        "n": 16,
+        "verified_repairs": 8,
+        "correct_diagnoses": 8,
+        "initial_decisions": {
+          "A": 7,
+          "B": 5,
+          "NEED_LOG": 1,
+          "INVALID": 3
+        },
+        "initial_evidence_requests": 1,
+        "retrievals": 0,
+        "initial_unsupported_guesses": null,
+        "mean_log_characters": 2842.75,
+        "mean_prompt_tokens": 1093.5,
+        "mean_generated_tokens": 87.12,
+        "initial_max_token_hits": 3,
+        "final_invalid_responses": 3
+      },
+      "tail_only": {
+        "n": 16,
+        "verified_repairs": 0,
+        "correct_diagnoses": 0,
+        "initial_decisions": {
+          "A": 0,
+          "B": 0,
+          "NEED_LOG": 16,
+          "INVALID": 0
+        },
+        "initial_evidence_requests": 16,
+        "retrievals": 0,
+        "initial_unsupported_guesses": 0,
+        "mean_log_characters": 118.0,
+        "mean_prompt_tokens": 173.75,
+        "mean_generated_tokens": 52.38,
+        "initial_max_token_hits": 0,
+        "final_invalid_responses": 0
+      },
+      "causal_slice": {
+        "n": 16,
+        "verified_repairs": 10,
+        "correct_diagnoses": 10,
+        "initial_decisions": {
+          "A": 9,
+          "B": 6,
+          "NEED_LOG": 0,
+          "INVALID": 1
+        },
+        "initial_evidence_requests": 0,
+        "retrievals": 0,
+        "initial_unsupported_guesses": null,
+        "mean_log_characters": 106.75,
+        "mean_prompt_tokens": 186.5,
+        "mean_generated_tokens": 74.44,
+        "initial_max_token_hits": 2,
+        "final_invalid_responses": 1
+      },
+      "decoy_summary": {
+        "n": 16,
+        "verified_repairs": 1,
+        "correct_diagnoses": 1,
+        "initial_decisions": {
+          "A": 0,
+          "B": 2,
+          "NEED_LOG": 14,
+          "INVALID": 0
+        },
+        "initial_evidence_requests": 14,
+        "retrievals": 0,
+        "initial_unsupported_guesses": 2,
+        "mean_log_characters": 192.0,
+        "mean_prompt_tokens": 191.75,
+        "mean_generated_tokens": 35.25,
+        "initial_max_token_hits": 0,
+        "final_invalid_responses": 0
+      },
+      "retrieval_enabled": {
+        "n": 16,
+        "verified_repairs": 10,
+        "correct_diagnoses": 10,
+        "initial_decisions": {
+          "A": 0,
+          "B": 0,
+          "NEED_LOG": 16,
+          "INVALID": 0
+        },
+        "initial_evidence_requests": 16,
+        "retrievals": 16,
+        "initial_unsupported_guesses": 0,
+        "mean_log_characters": 118.0,
+        "mean_prompt_tokens": 173.75,
+        "mean_generated_tokens": 52.38,
+        "initial_max_token_hits": 0,
+        "final_invalid_responses": 2,
+        "recovered_repairs_after_retrieval": 10,
+        "retrieval_final_max_token_hits": 2
+      }
+    }
+  },
+  "paired": {
+    "raw": {
+      "both_repaired": 7,
+      "baseline_only_repaired": 4,
+      "evidence_aware_only_repaired": 1,
+      "neither_repaired": 4
+    },
+    "tail_only": {
+      "both_repaired": 0,
+      "baseline_only_repaired": 2,
+      "evidence_aware_only_repaired": 0,
+      "neither_repaired": 14
+    },
+    "causal_slice": {
+      "both_repaired": 10,
+      "baseline_only_repaired": 3,
+      "evidence_aware_only_repaired": 0,
+      "neither_repaired": 3
+    },
+    "decoy_summary": {
+      "both_repaired": 0,
+      "baseline_only_repaired": 8,
+      "evidence_aware_only_repaired": 1,
+      "neither_repaired": 7
+    },
+    "retrieval_enabled": {
+      "both_repaired": 8,
+      "baseline_only_repaired": 3,
+      "evidence_aware_only_repaired": 2,
+      "neither_repaired": 3
+    }
+  }
+}

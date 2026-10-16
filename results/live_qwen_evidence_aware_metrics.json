@@ -1,0 +1,56 @@
+{
+  "total_decision_tasks": 80,
+  "unique_bug_cases": 16,
+  "unique_bug_families": 8,
+  "conditions": {
+    "raw": {
+      "n": 16,
+      "correct_diagnosis": 8,
+      "successful_verified_repairs": 8,
+      "requested_evidence_first": 1,
+      "retrievals": 0,
+      "unsupported_guesses_initial": null,
+      "mean_initial_log_characters": 2842.8
+    },
+    "tail_only": {
+      "n": 16,
+      "correct_diagnosis": 0,
+      "successful_verified_repairs": 0,
+      "requested_evidence_first": 16,
+      "retrievals": 0,
+      "unsupported_guesses_initial": 0,
+      "mean_initial_log_characters": 118.0
+    },
+    "causal_slice": {
+      "n": 16,
+      "correct_diagnosis": 10,
+      "successful_verified_repairs": 10,
+      "requested_evidence_first": 0,
+      "retrievals": 0,
+      "unsupported_guesses_initial": null,
+      "mean_initial_log_characters": 106.8
+    },
+    "decoy_summary": {
+      "n": 16,
+      "correct_diagnosis": 1,
+      "successful_verified_repairs": 1,
+      "requested_evidence_first": 14,
+      "retrievals": 0,
+      "unsupported_guesses_initial": 2,
+      "mean_initial_log_characters": 192.0
+    },
+    "retrieval_enabled": {
+      "n": 16,
+      "correct_diagnosis": 10,
+      "successful_verified_repairs": 10,
+      "requested_evidence_first": 16,
+      "retrievals": 16,
+      "unsupported_guesses_initial": 0,
+      "mean_initial_log_characters": 118.0
+    }
+  },
+  "status": "MEASURED_FROM_QWEN_GENERATIONS",
+  "model": "Qwen/Qwen3-4B-Instruct-2507",
+  "model_revision": "cdbee75f17c01a7cc42f958dc650907174af0554",
+  "caveat": "Executable toy repo patch-selection tasks; not SWE-bench or end-to-end autonomous freeform patch generation."
+}
