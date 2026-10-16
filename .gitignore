@@ -19,6 +19,10 @@ results/evidence_aware_generations.jsonl
 results/metrics.json
 results/run_metadata.json
 results/*_metrics.json
+# Published Qwen metric files are intentional, reproducible research artifacts
+!results/live_qwen_metrics.json
+!results/live_qwen_evidence_aware_metrics.json
+!results/analysis_metrics.json
 
 # Local caches and downloaded model weights
 .cache/
