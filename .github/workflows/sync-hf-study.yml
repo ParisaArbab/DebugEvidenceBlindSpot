@@ -52,6 +52,12 @@ jobs:
           assert all(x.get("backend")=="qwen" for x in a+b)
           print("Verified 160 measured Qwen decisions")
           PY
+      - name: Verify result hashes and rebuild analysis metrics
+        run: |
+          sha256sum --check RAW_RESULT_SHA256SUMS.txt
+          python analyze_actual_results.py
+          python verify_model_results.py results/live_qwen_all.jsonl --save results/live_qwen_metrics.json
+          python verify_model_results.py results/live_qwen_evidence_aware.jsonl --save results/live_qwen_evidence_aware_metrics.json
       - name: Commit research artifacts using requested identity
         shell: bash
         run: |
