@@ -1,0 +1,66 @@
+name: Sync verified Qwen study from Hugging Face
+
+on:
+  push:
+    paths:
+      - '.github/workflows/sync-hf-study.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  sync-study:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: true
+      - name: Download public, verified research artifacts
+        shell: bash
+        run: |
+          python -m pip install --upgrade 'huggingface_hub==1.16.1'
+          python - <<'PY'
+          from huggingface_hub import bucket_info, list_bucket_tree, sync_bucket
+          bucket = "prsarbb/debug-evidence-blindspot-live"
+          assert not bucket_info(bucket).private, "HF study bucket is not public"
+          files = [p for p in list_bucket_tree(bucket, recursive=True) if p.type == "file"]
+          assert len(files) >= 80, f"Expected a complete research package, got {len(files)} files"
+          must_have = {
+              "README.md",
+              "LIVE_EXPERIMENT_REPORT.md",
+              "SUBMISSION.md",
+              "analyze_actual_results.py",
+              "results/live_qwen_all.jsonl",
+              "results/live_qwen_evidence_aware.jsonl",
+              "results/live_qwen_metrics.json",
+              "results/live_qwen_evidence_aware_metrics.json",
+          }
+          available = {f.path for f in files}
+          assert must_have <= available, f"Missing required publication files: {must_have - available}"
+          sync_bucket(source=f"hf://buckets/{bucket}", dest=".")
+          print(f"Synced {len(files)} verified public study files")
+          PY
+      - name: Verify 160 measured Qwen decisions
+        run: |
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          a=[json.loads(x) for x in Path("results/live_qwen_all.jsonl").read_text().splitlines() if x.strip()]
+          b=[json.loads(x) for x in Path("results/live_qwen_evidence_aware.jsonl").read_text().splitlines() if x.strip()]
+          assert len(a)==80 and len(b)==80, f"Expected 80+80 decisions, found {len(a)}+{len(b)}"
+          assert all(x.get("backend")=="qwen" for x in a+b)
+          print("Verified 160 measured Qwen decisions")
+          PY
+      - name: Commit research artifacts using requested identity
+        shell: bash
+        run: |
+          git config user.name "ParisaArbab"
+          git config user.email "pa.arbab@gmail.com"
+          git add -A
+          if git diff --cached --quiet; then
+            echo "Research artifacts already up to date"
+          else
+            git commit -m "Add verified Qwen experiments, failure analysis, and final research report"
+            git push origin HEAD:main
+          fi
