@@ -83,4 +83,4 @@ hf auth login  # authenticate privately; do not put your token in code or chat
 python publish_live_bucket.py --bucket-name debug-evidence-blindspot-live
 ```
 
-The expected Bucket namespace comes from the authenticated Hugging Face account. **Do not claim that a public Bucket exists until the publication command completes and public access is checked.**
+The expected Bucket namespace comes from the authenticated Hugging Face account.
