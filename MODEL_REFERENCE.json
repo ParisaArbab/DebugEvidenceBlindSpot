@@ -3,10 +3,13 @@
   "model_url": "https://huggingface.co/Qwen/Qwen3-4B-Instruct-2507",
   "parameters": "4.0B",
   "license": "apache-2.0",
-  "chosen_for": "coding and tool-use abilities, open weights, can be evaluated with 4-bit quantization on a modest CUDA GPU",
-  "quantization_for_run": "NF4 4-bit",
-  "decoding_for_run": "greedy, temperature not applicable",
-  "original_weights": "Remain publicly hosted in original Hugging Face model repository; not duplicated in the evaluation bucket",
-  "resolved_revision_at_run": "See results/run_metadata.json after actual GPU run",
-  "model_evaluation_status": "NOT_RUN_IN_PREPARATION_ENVIRONMENT"
+  "resolved_revision": "cdbee75f17c01a7cc42f958dc650907174af0554",
+  "experiment_platform": "AIScalar A100 80GB",
+  "quantization": "NF4 4-bit (as configured in live_eval.py)",
+  "decoding": "Greedy, do_sample=False, max_new_tokens=120",
+  "number_of_model_decisions": 160,
+  "result_files": ["results/live_qwen_all.jsonl", "results/live_qwen_evidence_aware.jsonl"],
+  "original_weights": "Hosted at the upstream model URL, not duplicated in the public evaluation artifact",
+  "status": "GPU_EVALUATION_COMPLETED_AND_INDEPENDENTLY_VERIFIED",
+  "limitations": "Eight paired synthetic bug families; controlled patch selection; invalid JSON may result from truncated generation"
 }

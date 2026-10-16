@@ -1,56 +1,107 @@
-# Experimental report: Live Causal Debugging Under Context Compression
+# Live Causal Evidence Deletion: completed Qwen3-4B experiment
 
-**Experiment date:** 2026-10-15  
-**Evaluation status:** Completed local execution tests for two non-LLM control policies; **frontier model inference NOT run**.  
-**Source:** `live_bugs/manifest.json`, `results/live_*.jsonl`, `live_eval.py`.  
-**Model planned:** [Qwen/Qwen3-4B-Instruct-2507](https://huggingface.co/Qwen/Qwen3-4B-Instruct-2507), 4B parameters, but no model scores currently exist.
+**Study completed:** October 15, 2026  
+**Model:** [`Qwen/Qwen3-4B-Instruct-2507`](https://huggingface.co/Qwen/Qwen3-4B-Instruct-2507), 4B parameters  
+**Resolved model revision:** `cdbee75f17c01a7cc42f958dc650907174af0554`  
+**Execution:** AIScalar, NVIDIA A100 80GB, 4-bit NF4 model loading, greedy decoding  
+**Verification:** Both JSONL files passed `verify_model_results.py`; `analyze_actual_results.py` also checked all matched-world observation hashes and cross-run case IDs.
 
-## Question
-Can a coding agent recognize when tool-output compression has removed the diagnostic information it needs to select the correct code fix, and can targeted retrieval repair that loss?
+## Research question
 
-## What was actually executed
-- 8 hand-designed executable Python bug families, 2 worlds per family, **16 failing test projects**; each world contains exactly one configurable defect and a targeted one-line repair.
-- 5 evidence conditions per world: `raw`, `tail_only`, `causal_slice`, `decoy_summary`, `retrieval_enabled`.
-- **80 end-to-end agent actions per non-LLM control (160 decision tasks in total)**. Agents choose from two candidate fixes or request the missing diagnostics. The harness copies the project into an isolated temporary folder, applies the selected fix, executes the program three times and runs pytest. It does not let the evaluator edit the reference files or tests.
-- Before repair, all 16 original projects failed three consecutive reproduction runs and failed pytest. When a correct patch was chosen, three subsequent runs and pytest passed. An incorrect patch was not silently counted as a repair.
-- The code genuinely executes the bug and produces its diagnostic values. The final failure message is standardized on purpose so two possible root causes look identical if the earlier diagnostic lines are omitted.
-- Test files and execution evidence are available, and the complete dataset can be rebuilt deterministically using `build_live_cases.py`.
+When an AI coding agent receives a compressed or misleading tool output, can it tell whether the evidence needed to diagnose a bug is missing? Can it still reason correctly after the relevant evidence is restored?
 
-## Results: measured local controls, not a model study
+This comes from research on context optimization for AI debugging agents. A shorter log can save time and tokens, but removing one important line can make two different bugs look the same. A model may still give a confident answer, or trust an earlier summarizer's unverified guess.
 
-| Condition | Diagnostic-rule repair | Guess-A repair | First-step evidence requests |
-|---|---:|---:|---:|
-| Full log | 16/16 | 8/16 | 0/16 |
-| Evidence deleted | 0/16 | 8/16 | 16/16 |
-| Causal slice | 16/16 | 8/16 | 0/16 |
-| Unverified triage guess | 0/16 | 8/16 | 16/16 |
-| Retrieve on request | 16/16 | 8/16 | 16/16 |
+## Experimental design
 
-The diagnostic rule checks executed variable values against the two known-good settings. It is a **rule-based upper-bound sanity check that uses handcrafted family metadata**. It is **not Qwen, not an LLM, and not an evaluation of frontier-model accuracy**.
+- **Eight small executable Python bug families**, each constructed as a counterfactual pair with different correct root causes: **16 bugs** total.
+- **Five observation conditions** for each bug: `raw` full noisy log, `tail_only` deleted causal evidence, `causal_slice` short log preserving diagnostic evidence, `decoy_summary` deleted evidence plus an identical unverified suggestion that A is likely, and `retrieval_enabled` deleted evidence with optional targeted retrieval.
+- **Two prompting regimes** with the same 4B model and same examples: baseline debugging instruction and evidence-aware instruction that explicitly says to ask for missing evidence and distrust unverified summaries.
+- **160 recorded decisions** (16 bugs × 5 conditions × 2 prompting regimes); model responses and token counts are saved in the original JSONL files. The retrieval condition may include a second model generation after `NEED_LOG`.
+- **Actual code execution:** Each buggy program first failed three repeated runs and pytest; the agent chose A, B, or `NEED_LOG`. The harness applied the corresponding prewritten one-line patch in a temporary copy and checked three repeated runs and pytest. This is a **controlled patch-selection** study, not free-form patch generation or SWE-bench.
+- Under `tail_only`, `decoy_summary`, and the initial `retrieval_enabled` observation, the two worlds in each family have exactly identical observation hashes, checked independently. A correct-looking decision from these views alone cannot reliably distinguish the worlds.
 
-The always-guess-A control guesses A in all cases. Each matched family contains one A and one B world, hence 8/16 repairs is no better than chance. Importantly, **all 16 of its guesses on `tail_only` and `decoy_summary` are unsupported**, even though 8 of them happen to repair the defect.
+## Main results, independently recalculated from raw JSONL files
 
-On the evidence-deleted condition, the diagnostic rule requests evidence on 16/16 cases, and does not attempt an unsupported patch. Under the `retrieval_enabled` condition it requests earlier diagnostics 16/16 times, then selects the correct patch and repairs all 16 variants. This is evidence that the **benchmark's retrieval intervention operates as designed**, not proof that Qwen would know to use it.
+**Successful verified patches** (not the best metric for evidence-deleted conditions, where abstention is desirable):
 
-## Evidence efficiency, measured in characters, not LLM tokens
+| Condition | Baseline | Evidence-aware |
+|---|---:|---:|
+| Raw tool output | 11/16 (68.75%) | 8/16 (50%) |
+| Deleted evidence (`tail_only`) | 2/16 (12.5%) | 0/16 (0%) |
+| Causal diagnostic slice | 13/16 (81.25%) | 10/16 (62.5%) |
+| Missing evidence plus misleading summary | 8/16 (50%) | 1/16 (6.25%) |
+| Retrieval permitted | 11/16 (68.75%) | 10/16 (62.5%) |
 
-- Full logs: mean **2842.8 characters**.
-- Tail-only logs: mean **118.0 characters**, **95.8% shorter**.
-- Causally sliced logs: mean **106.8 characters**, **96.2% shorter**.
+**Evidence requests and unsafe guesses**:
 
-Therefore compressing more aggressively is not the same as preserving useful evidence. The real GPU run will record the model's token counts, not approximate them with character counts.
+| Condition | Baseline requested evidence | Evidence-aware requested evidence |
+|---|---:|---:|
+| Deleted evidence | 12/16 | 16/16 |
+| Misleading summary | 0/16 | 14/16 |
+| Retrieval permitted, before retrieval | 12/16 | 16/16 |
 
-## Validity and limitations
+For the misleading-summary condition, the baseline chose **A in all 16 paired worlds**. Thus it repaired all eight A worlds and none of the eight B worlds. This is a direct sign of strong attraction to the unverified "A" suggestion. It does **not** show 50% legitimate debugging accuracy. The evidence-aware prompt asked for evidence in 14 worlds; the remaining two guesses were both B, and only one happened to be correct.
 
-1. **This does not establish a frontier-model blind spot yet.** No downloaded model weights, GPU, or authenticated inference endpoint was available in the preparation environment. Run `LIVE_Qwen3_4B_Colab.ipynb` on a GPU, and include complete raw generations before making any Qwen-specific performance claim.
-2. These are small, deliberately built executable examples. They demonstrate a testable information-loss mechanism, not measured failure rates in production repositories or SWE-bench.
-3. A controlled patch-choice interface is used; the agent does not synthesize unconstrained unified diffs. This isolates evidence use and debugging decision quality from code-generation difficulty.
-4. The rule-based upper bound is given nominal configuration values, so it is not an independent general debugging algorithm. A strong LLM could do better or worse on the actual prompts.
-5. The raw condition adds deterministic neutral heartbeat lines. The decoy is a synthetic unverified summary. Neither should be described as mined from a real-world agent's interaction history.
-6. Patch repair is evaluated using a one-line targeted change and a single test contract in each project. A full research extension needs multi-test regressions, open-ended patches, larger source trees, held-out bugs, varied compression policies, and possibly adversarial perturbed naming.
+For tail-only evidence, the baseline made four unsupported B guesses and abstained 12 times, while the evidence-aware prompt abstained 16 times. Therefore **0 repairs for evidence-aware tail-only is a good refusal outcome, not a failed diagnosis**.
 
-## Next experiment, executable with the included notebook
+In the retrieval condition, the baseline requested evidence 12 times and repaired 9 of those 12 after it was supplied; two other repairs came from unsupported guesses without retrieval. The evidence-aware prompt requested evidence 16 times and repaired 10 after seeing the retrieved diagnostics. The model therefore **still sometimes misinterprets adequate evidence**.
 
-Run the same 16 worlds and 5 conditions with quantized **Qwen3-4B-Instruct-2507**. Record the raw JSON output and resolved model commit revision, prompt/completion token counts, runtime, first choice, retrieval decision, and verified patch-test outcome. Verify paired-world blindness after diagnostic deletion and measure counterfactual reversal with evidence. Use the model's existing ability to request diagnostics rather than tell it the ground-truth world.
+The baseline causal slice produced **13/16 verified fixes vs 11/16 for full logs**, while average visible log length fell from 2,842.8 to 106.8 characters (about **96.2% shorter**). Initial model input fell from an average of 1,077.5 to 170.5 tokens (**84.2% fewer prompt tokens**, including fixed instructions). The evidence-aware causal slice also exceeded evidence-aware raw logs (10/16 vs 8/16). These two-case differences are descriptive, not evidence of statistical superiority with only eight independent bug families.
 
-Only after these Qwen generations exist may the README be updated with true measured model rates and the public Hugging Face Bucket be published as a completed frontier-model evaluation.
+## Direct inspection of model behavior
+
+### Example 1: The model copies a misleading summary
+
+**Case:** `pagination_B`. The actual cause is **B: cursor never advances**. The short observation contains no causal diagnostic line, only the common failure and an unverified statement that cause A is likely.
+
+- Baseline response: `{"decision":"A","evidence":"The export loop is limited to one page, as indicated by the assertion error during contract validation, suggesting incomplete data retrieval due to pagination constraints."}`
+- Evidence-aware response: chose **B**, also unsupported, arguing that the cursor must be stuck despite missing evidence.
+- Verified outcome: both decisions came from insufficient observation; the baseline patch was wrong and the evidence-aware patch happened to pass. A model should have requested the missing diagnostic trace.
+
+### Example 2: Evidence present, but the diagnosis contradicts it
+
+**Case:** `graph_edges_B`. The true cause is **B: forward write edges are removed**. The raw log showed `KEEP_REVERSE=True` and `KEEP_WRITES=False`.
+
+- Baseline: chose **B** and repaired the case.
+- Evidence-aware: chose **A** and claimed the failure was more likely due to missing reverse edges **after explicitly stating that reverse edges were preserved**.
+- This is a *reasoning-on-available-evidence* failure, not missing-evidence failure. The error illustrates why evidence sufficiency and causal interpretation should be evaluated separately.
+
+### Example 3: Diagnosing a familiar explanation instead of the actual setting
+
+**Case:** `invoice_total_A`. The true cause is **A: wrong cents conversion**. The raw log showed `CENTS_SCALE=1`, although the known-good value is 100, and `DISCOUNT_SIGN=-1`, already the correct sign.
+
+- Both prompts chose **B**, claiming the discount had the wrong sign, despite reporting that the discount was being subtracted.
+- Both selected patches failed. This is a concrete example of a common-sense story overriding the observed configuration.
+
+### Example 4: Some apparent failures are output truncation
+
+`live_eval.py` allowed a maximum of **120 generated tokens** per model response. An incomplete JSON response is marked `INVALID` and cannot trigger a patch. There were **3 final invalid responses under the baseline** and **6 under the evidence-aware prompt**. Every recorded invalid final response reached the 120-token cap (in its final generation). These are formatting/truncation failures, not necessarily wrong causal diagnoses. For example, the baseline response to `json_cleanup_B` ended mid-sentence and was rejected by the parser.
+
+This matters for the interpretation of the lower evidence-aware repair count: stronger instructions sometimes produced longer explanations and more clipped outputs. A follow-up should use structured decoding or a larger token budget and report invalid-format rates separately.
+
+## Proposed path forward
+
+1. **Curate paired, executable data.** Collect actual CI failures, debugging tool traces, and verified minimal fixes. Create matched pairs with the same high-level error but different root causes. For each pair, annotate the decisive evidence, missing evidence, source location, verified patch, and minimal retrieval query.
+2. **Train evidence-aware behavior.** Use supervised fine-tuning or QLoRA on full, causal-slice, missing-evidence, and deceptive-summary variants. Reward valid abstention when evidence cannot distinguish causes, and reward correct diagnosis only after adequate evidence is present. Add preference examples penalizing confident answers based solely on unreliable summaries.
+3. **Change the agent workflow.** Separate an *evidence sufficiency gate* from the actual debugging model. Preserve diagnostic provenance and offsets during compression, use program slicing to identify relevant code and observations, retrieve targeted missing logs on demand, and require post-patch execution validation.
+4. **Evaluate both capabilities.** Report unsupported guess rate under identical observations, evidence request rate, successful repairs when evidence exists, reliability after retrieval, token and latency costs, and invalid output rate. Include held-out repositories and ablations for label order, decoy wording, and compressor type.
+
+## Limits and validity threats
+
+- Only **eight designed bug families**; A/B worlds are paired, not independent. Numbers should not be generalized to production coding agents.
+- The challenge measures **choosing one of two predefined fixes**. It does not evaluate writing original patches, navigating large repositories, or recovering from arbitrary tool failures.
+- The decoy always recommended **A**. Its strong effect is real in this setup, but future experiments must counterbalance recommendation labels and vary wording to distinguish anchoring to the summary from broader label bias.
+- Model output truncation at 120 tokens creates a format-related confound. Decoding is deterministic within a prompt, but one run per configuration is not enough to estimate robustness under diverse prompts or programs.
+- Evidence deletion is controlled. The current benchmark uses intentionally injected settings and artificial repeated heartbeat lines, not mined production traces.
+- Retrieval-enabled results depend on a single fixed retrieval action, not an agent autonomously searching arbitrary code or logs.
+
+## Reproduction and source files
+
+- `results/live_qwen_all.jsonl`: all 80 baseline decisions, raw model responses, model revision, token counts and patch validation.
+- `results/live_qwen_evidence_aware.jsonl`: same 80 cases with evidence-aware instructions.
+- `results/live_qwen_metrics.json`, `results/live_qwen_evidence_aware_metrics.json`: original verification outputs.
+- `results/analysis_metrics.json`, `results/case_level_comparison.csv`: independently regenerated metrics and paired response table.
+- `analyze_actual_results.py`: regeneration and matched-world checks.
+- `live_bugs/`, `live_eval.py`, `build_live_cases.py`, `verify_model_results.py`: executable dataset and model evaluation implementation.
+- Model weights are not republished; reproducibility uses the exact upstream model revision recorded above.
